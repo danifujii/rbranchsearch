@@ -1,4 +1,4 @@
-use crossterm::{cursor, style::Print, terminal, ErrorKind, QueueableCommand};
+use crossterm::{cursor, execute, queue, style, terminal, Result};
 use std::io::{stdout, Write};
 use std::process::Command;
 use std::str;
@@ -23,18 +23,30 @@ fn get_branches() -> Vec<String> {
     panic!("Failed to obtain branches: cmd unsucessful");
 }
 
-fn main() -> Result<(), ErrorKind> {
+fn main() -> Result<()> {
     let mut stdout = stdout();
-    stdout.queue(terminal::Clear(terminal::ClearType::All))?;
+    queue!(
+        stdout,
+        terminal::Clear(terminal::ClearType::All),
+        cursor::Hide,
+        cursor::MoveTo(0, 0)
+    )?;
 
     let branches = get_branches();
     for i in 0..branches.len() {
-        stdout
-            .queue(cursor::MoveTo(0, i as u16))?
-            .queue(Print(&branches[i]))?;
+        queue!(
+            stdout,
+            style::Print(&branches[i]),
+            cursor::MoveToNextLine(1)
+        )?;
     }
 
     stdout.flush()?;
+
+    execute!(
+        stdout,
+        cursor::Show
+    )?;
 
     Ok(())
 }
