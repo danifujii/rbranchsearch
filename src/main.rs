@@ -110,7 +110,10 @@ fn main() -> Result<()> {
                 KeyCode::Enter => {
                     let cmd = execute_command(
                         "git".to_string(),
-                        vec![&"checkout".to_string(), &branches[selected_branch].trim().to_string()],
+                        vec![
+                            &"checkout".to_string(),
+                            &branches[selected_branch].trim().to_string(),
+                        ],
                     );
                     if !cmd.status.success() {
                         terminal::disable_raw_mode()?;
