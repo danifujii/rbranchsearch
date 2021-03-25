@@ -17,6 +17,18 @@ fn draw_selected_branch(stdout: &Stdout, branches: &Vec<String>, selected: usize
     Ok(())
 }
 
+fn update_selected_branch(
+    stdout: &Stdout,
+    branches: &Vec<String>,
+    selected: usize,
+    up: bool,
+) -> Result<()> {
+    gui::write_line(&stdout, &branches[selected], selected as u16)?; // Reset previous selected
+    let new_selected = if up { selected - 1 } else { selected + 1 };
+    draw_selected_branch(&stdout, &branches, new_selected)?;
+    Ok(())
+}
+
 fn main() -> Result<()> {
     terminal::enable_raw_mode()?;
 
@@ -40,24 +52,14 @@ fn main() -> Result<()> {
             match kc {
                 KeyCode::Up => {
                     if selected_branch > 0 {
-                        gui::write_line(
-                            &stdout,
-                            &branches[selected_branch],
-                            selected_branch as u16,
-                        )?;
+                        update_selected_branch(&stdout, &branches, selected_branch, true)?;
                         selected_branch -= 1;
-                        draw_selected_branch(&stdout, &branches, selected_branch)?;
                     }
                 }
                 KeyCode::Down => {
                     if selected_branch < branches.len() - 1 {
-                        gui::write_line(
-                            &stdout,
-                            &branches[selected_branch],
-                            selected_branch as u16,
-                        )?;
+                        update_selected_branch(&stdout, &branches, selected_branch, false)?;
                         selected_branch += 1;
-                        draw_selected_branch(&stdout, &branches, selected_branch)?;
                     }
                 }
                 KeyCode::Enter => {
