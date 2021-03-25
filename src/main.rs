@@ -29,24 +29,20 @@ fn update_selected_branch(
     Ok(())
 }
 
-fn main() -> Result<()> {
-    terminal::enable_raw_mode()?;
-
-    let mut stdout = stdout();
+fn setup(mut stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
     queue!(
         stdout,
         terminal::Clear(terminal::ClearType::All),
         cursor::Hide,
         cursor::MoveTo(0, 0)
     )?;
-
-    // Initial draw
-    let branches = git::get_branches();
-    let mut selected_branch: usize = 0;
     gui::write_lines(&stdout, &branches)?;
-    draw_selected_branch(&stdout, &branches, selected_branch)?;
+    draw_selected_branch(&stdout, &branches, 0)?;
+    Ok(())
+}
 
-    // Main loop
+fn main_loop(stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
+    let mut selected_branch: usize = 0;
     loop {
         if let Ok(Event::Key(KeyEvent { code: kc, .. })) = event::read() {
             match kc {
@@ -78,10 +74,22 @@ fn main() -> Result<()> {
             }
         }
     }
+    Ok(())
+}
 
-    // Clean up
+fn cleanup(mut stdout: &Stdout) -> Result<()> {
     terminal::disable_raw_mode()?;
     execute!(stdout, cursor::Show)?;
+    Ok(())
+}
 
+fn main() -> Result<()> {
+    terminal::enable_raw_mode()?;
+
+    let branches = git::get_branches();
+    let stdout = stdout();
+    setup(&stdout, &branches)?;
+    main_loop(&stdout, &branches)?;
+    cleanup(&stdout)?;
     Ok(())
 }
