@@ -30,6 +30,7 @@ fn update_selected_branch(
 }
 
 fn setup(mut stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
+    terminal::enable_raw_mode()?;
     queue!(
         stdout,
         terminal::Clear(terminal::ClearType::All),
@@ -84,8 +85,6 @@ fn cleanup(mut stdout: &Stdout) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    terminal::enable_raw_mode()?;
-
     let branches = git::get_branches();
     let stdout = stdout();
     setup(&stdout, &branches)?;
