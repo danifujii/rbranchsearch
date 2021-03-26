@@ -2,11 +2,11 @@ use std::collections::HashMap;
 use std::process::{Command, Output};
 use std::str;
 
-pub fn get_matching_branches(search: String, branches: &Vec<String>) -> Vec<String> {
+pub fn get_matching_branches(search: &String, branches: &Vec<String>) -> Vec<String> {
     let mut result = Vec::new();
     let mut positions = HashMap::new();
     for s in branches {
-        if let Some(i) = s.find(&search) {
+        if let Some(i) = s.find(search) {
             positions.insert(s, i);
             result.push(s.to_string());
         }

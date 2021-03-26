@@ -23,6 +23,7 @@ pub fn write_line(mut stdout: &Stdout, line: &String, idx: u16) -> Result<()> {
 }
 
 pub fn write_lines(mut stdout: &Stdout, lines: &Vec<String>) -> Result<()> {
+    queue!(stdout, terminal::Clear(terminal::ClearType::FromCursorDown))?;
     for i in 0..lines.len() {
         queue!(stdout, style::Print(&lines[i]), cursor::MoveToNextLine(1))?;
     }
