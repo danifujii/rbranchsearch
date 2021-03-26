@@ -52,7 +52,7 @@ mod tests {
     #[test]
     fn test_matching_branches() {
         let result = get_matching_branches(
-            String::from("ab"),
+            &String::from("ab"),
             &vec![String::from("cab"), String::from("ab"), String::from("d")],
         );
         assert_eq!(result, vec!["ab", "cab"]);
@@ -60,14 +60,14 @@ mod tests {
 
     #[test]
     fn test_no_matching_branches() {
-        let result = get_matching_branches(String::from("ab"), &vec![String::from("d")]);
+        let result = get_matching_branches(&String::from("ab"), &vec![String::from("d")]);
         assert_eq!(result, [] as [&str; 0]);
     }
 
     #[test]
     fn test_empty() {
         let result = get_matching_branches(
-            String::from(""),
+            &String::from(""),
             &vec![String::from("a"), String::from("b")],
         );
         assert_eq!(result, vec!["a", "b"]);

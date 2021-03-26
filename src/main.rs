@@ -9,6 +9,7 @@ mod git;
 mod gui;
 
 const SELECTED_INDICATOR: char = '*';
+const DISPLAY_OFFSET: u16 = 2;
 
 fn draw_selected_branch(stdout: &Stdout, branches: &Vec<String>, selected: usize) -> Result<()> {
     if branches.is_empty() || selected > branches.len() - 1 {
@@ -16,7 +17,7 @@ fn draw_selected_branch(stdout: &Stdout, branches: &Vec<String>, selected: usize
     }
     let branch: String = (&branches[selected]).chars().skip(1).collect();
     let selected_branch: String = format!("{}{}", SELECTED_INDICATOR, branch);
-    gui::write_line(&stdout, &selected_branch, selected as u16)?;
+    gui::write_line(&stdout, &selected_branch, selected as u16 + DISPLAY_OFFSET)?;
     Ok(())
 }
 
@@ -26,9 +27,17 @@ fn update_selected_branch(
     selected: usize,
     up: bool,
 ) -> Result<()> {
-    gui::write_line(&stdout, &branches[selected], selected as u16)?; // Reset previous selected
+    gui::write_line(&stdout, &branches[selected], selected as u16 + DISPLAY_OFFSET)?; // Reset previous selected
     let new_selected = if up { selected - 1 } else { selected + 1 };
     draw_selected_branch(&stdout, &branches, new_selected)?;
+    Ok(())
+}
+
+fn draw_header(stdout: &Stdout, content: Vec<String>) -> Result<()> {
+    gui::write_lines(stdout, &content, 0)?;
+    for i in content.len()..DISPLAY_OFFSET as usize {
+        gui::write_line(&stdout, &String::new(), i as u16)?;
+    }
     Ok(())
 }
 
@@ -40,7 +49,8 @@ fn setup(mut stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
         cursor::Hide,
         cursor::MoveTo(0, 0)
     )?;
-    gui::write_lines(&stdout, &branches)?;
+    draw_header(stdout, Vec::new())?;
+    gui::write_lines(&stdout, &branches, DISPLAY_OFFSET)?;
     draw_selected_branch(&stdout, &branches, 0)?;
     Ok(())
 }
@@ -48,50 +58,57 @@ fn setup(mut stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
 fn main_loop(stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
     let mut search = String::new();
     let mut selected_branch: usize = 0;
-    let mut displayed_brances = branches.to_vec();
+    let mut displayed_branches = branches.to_vec();
     loop {
         if let Ok(Event::Key(KeyEvent { code: kc, .. })) = event::read() {
             match kc {
                 KeyCode::Up => {
-                    if !displayed_brances.is_empty() && selected_branch > 0 {
-                        update_selected_branch(&stdout, &displayed_brances, selected_branch, true)?;
+                    if !displayed_branches.is_empty() && selected_branch > 0 {
+                        update_selected_branch(&stdout, &displayed_branches, selected_branch, true)?;
                         selected_branch -= 1;
                     }
                 }
                 KeyCode::Down => {
-                    if !displayed_brances.is_empty() && selected_branch < displayed_brances.len() - 1 {
-                        update_selected_branch(&stdout, &displayed_brances, selected_branch, false)?;
+                    if !displayed_branches.is_empty() && selected_branch < displayed_branches.len() - 1 {
+                        update_selected_branch(&stdout, &displayed_branches, selected_branch, false)?;
                         selected_branch += 1;
                     }
                 }
                 KeyCode::Enter => {
-                    if selected_branch < displayed_brances.len() - 1 {
+                    if !displayed_branches.is_empty() && selected_branch < displayed_branches.len() - 1 {
                         if let Err(s) =
                             git::change_branch(branches[selected_branch].trim().to_string())
                         {
                             gui::display_closing_error(&stdout, s)?;
                         }
+                        break;
                     }
-                    break;
                 }
                 KeyCode::Char(c) => {
                     if c == 'q' {
                         break;
                     } else {
                         search.push(c);
-                        displayed_brances = git::get_matching_branches(&search, &branches);
-                        gui::write_lines(&stdout, &displayed_brances)?;
+                        gui::write_line(&stdout, &format!("Searching: {}", search), 0)?;
+                        displayed_branches = git::get_matching_branches(&search, &branches);
+                        gui::write_lines(&stdout, &displayed_branches, DISPLAY_OFFSET)?;
                         selected_branch = 0;
-                        draw_selected_branch(&stdout, &displayed_brances, selected_branch)?;
+                        draw_selected_branch(&stdout, &displayed_branches, selected_branch)?;
                     }
                 }
                 KeyCode::Backspace => {
                     if !search.is_empty() {
                         search.pop();
-                        displayed_brances = git::get_matching_branches(&search, &branches);
-                        gui::write_lines(&stdout, &displayed_brances)?;
+                        if search.is_empty() {
+                            gui::write_line(&stdout, &String::new(), 0)?;
+                        } else {
+                            gui::write_line(&stdout, &format!("Searching: {}", search), 0)?;
+                        }
+
+                        displayed_branches = git::get_matching_branches(&search, &branches);
+                        gui::write_lines(&stdout, &displayed_branches, DISPLAY_OFFSET)?;
                         selected_branch = 0;
-                        draw_selected_branch(&stdout, &displayed_brances, selected_branch)?;
+                        draw_selected_branch(&stdout, &displayed_branches, selected_branch)?;
                     }
                 }
                 _ => {}
