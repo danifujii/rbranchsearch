@@ -30,7 +30,10 @@ pub fn get_branches() -> Vec<String> {
 }
 
 pub fn change_branch(branch: String) -> Result<(), String> {
-    let cmd = execute_command("git".to_string(), vec![&"checkout".to_string(), &branch]);
+    let cmd = execute_command(
+        "git".to_string(),
+        vec![&"checkout".to_string(), &(branch.trim().to_string())],
+    );
     return if cmd.status.success() {
         Ok(())
     } else {
