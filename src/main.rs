@@ -13,7 +13,7 @@ const DISPLAY_OFFSET: u16 = 2;
 
 fn draw_selected_branch(stdout: &Stdout, branches: &Vec<String>, selected: usize) -> Result<()> {
     if branches.is_empty() || selected > branches.len() - 1 {
-        return Ok(())  // Nothing to do
+        return Ok(()); // Nothing to do
     }
     let branch: String = (&branches[selected]).chars().skip(1).collect();
     let selected_branch: String = format!("{}{}", SELECTED_INDICATOR, branch);
@@ -27,7 +27,11 @@ fn update_selected_branch(
     selected: usize,
     up: bool,
 ) -> Result<()> {
-    gui::write_line(&stdout, &branches[selected], selected as u16 + DISPLAY_OFFSET)?; // Reset previous selected
+    gui::write_line(
+        &stdout,
+        &branches[selected],
+        selected as u16 + DISPLAY_OFFSET,
+    )?; // Reset previous selected
     let new_selected = if up { selected - 1 } else { selected + 1 };
     draw_selected_branch(&stdout, &branches, new_selected)?;
     Ok(())
@@ -64,18 +68,32 @@ fn main_loop(stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
             match kc {
                 KeyCode::Up => {
                     if !displayed_branches.is_empty() && selected_branch > 0 {
-                        update_selected_branch(&stdout, &displayed_branches, selected_branch, true)?;
+                        update_selected_branch(
+                            &stdout,
+                            &displayed_branches,
+                            selected_branch,
+                            true,
+                        )?;
                         selected_branch -= 1;
                     }
                 }
                 KeyCode::Down => {
-                    if !displayed_branches.is_empty() && selected_branch < displayed_branches.len() - 1 {
-                        update_selected_branch(&stdout, &displayed_branches, selected_branch, false)?;
+                    if !displayed_branches.is_empty()
+                        && selected_branch < displayed_branches.len() - 1
+                    {
+                        update_selected_branch(
+                            &stdout,
+                            &displayed_branches,
+                            selected_branch,
+                            false,
+                        )?;
                         selected_branch += 1;
                     }
                 }
                 KeyCode::Enter => {
-                    if !displayed_branches.is_empty() && selected_branch < displayed_branches.len() - 1 {
+                    if !displayed_branches.is_empty()
+                        && selected_branch < displayed_branches.len() - 1
+                    {
                         if let Err(s) =
                             git::change_branch(branches[selected_branch].trim().to_string())
                         {
