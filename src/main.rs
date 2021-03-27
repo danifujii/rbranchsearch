@@ -4,6 +4,9 @@ use crossterm::{
     execute, queue, terminal, Result,
 };
 use std::io::{stdout, Stdout};
+#[macro_use]
+extern crate clap;
+use clap::App;
 
 mod git;
 mod gui;
@@ -45,7 +48,7 @@ fn draw_header(stdout: &Stdout, content: Vec<String>) -> Result<()> {
     Ok(())
 }
 
-fn setup(mut stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
+fn setup(mut stdout: &Stdout) -> Result<()> {
     terminal::enable_raw_mode()?;
     queue!(
         stdout,
@@ -53,6 +56,10 @@ fn setup(mut stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
         cursor::Hide,
         cursor::MoveTo(0, 0)
     )?;
+    Ok(())
+}
+
+fn initial_draw(stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
     draw_header(stdout, Vec::new())?;
     gui::write_lines(&stdout, &branches, DISPLAY_OFFSET)?;
     draw_selected_branch(&stdout, &branches, 0)?;
@@ -94,9 +101,7 @@ fn main_loop(stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
                     if !displayed_branches.is_empty()
                         && selected_branch < displayed_branches.len() - 1
                     {
-                        if let Err(s) =
-                            git::change_branch(branches[selected_branch].trim().to_string())
-                        {
+                        if let Err(s) = git::change_branch(branches[selected_branch].to_string()) {
                             gui::display_closing_error(&stdout, s)?;
                         }
                         break;
@@ -143,10 +148,25 @@ fn cleanup(mut stdout: &Stdout) -> Result<()> {
 }
 
 fn main() -> Result<()> {
+    let yaml = load_yaml!("cli.yaml");
+    let matches = App::from_yaml(yaml).get_matches();
     let branches = git::get_branches();
     let stdout = stdout();
-    setup(&stdout, &branches)?;
-    main_loop(&stdout, &branches)?;
+
+    setup(&stdout)?;
+
+    if let Some(s) = matches.value_of("BRANCH") {
+        let matching = git::get_matching_branches(&s.to_string(), &branches);
+        if matching.is_empty() {
+            gui::display_closing_error(&stdout, String::from("Could not find a matching branch"))?;
+        } else if let Err(s) = git::change_branch(matching.first().unwrap().to_string()) {
+            gui::display_closing_error(&stdout, s)?;
+        }
+    } else {
+        initial_draw(&stdout, &branches)?;
+        main_loop(&stdout, &branches)?;
+    }
+
     cleanup(&stdout)?;
     Ok(())
 }

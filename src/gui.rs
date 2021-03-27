@@ -7,7 +7,8 @@ pub fn display_closing_error(mut stdout: &Stdout, err: String) -> Result<()> {
         stdout,
         terminal::Clear(terminal::ClearType::All),
         cursor::MoveTo(0, 0),
-        style::Print(err)
+        style::Print(err),
+        cursor::MoveToNextLine(1)
     )?;
     Ok(())
 }
