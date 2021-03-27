@@ -1,6 +1,6 @@
 use crossterm::{
     cursor,
-    event::{self, Event, KeyCode, KeyEvent},
+    event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
     execute, queue, terminal, Result,
 };
 use std::io::{stdout, Stdout};
@@ -71,7 +71,7 @@ fn main_loop(stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
     let mut selected_branch: usize = 0;
     let mut displayed_branches = branches.to_vec();
     loop {
-        if let Ok(Event::Key(KeyEvent { code: kc, .. })) = event::read() {
+        if let Ok(Event::Key(KeyEvent { code: kc, modifiers: km })) = event::read() {
             match kc {
                 KeyCode::Up => {
                     if !displayed_branches.is_empty() && selected_branch > 0 {
@@ -108,7 +108,7 @@ fn main_loop(stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
                     }
                 }
                 KeyCode::Char(c) => {
-                    if c == 'q' {
+                    if c == 'c' && km == KeyModifiers::CONTROL {
                         break;
                     } else {
                         search.push(c);

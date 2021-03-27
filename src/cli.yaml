@@ -1,0 +1,9 @@
+name: rbranchsearch
+version: "1.0"
+author: Daniel Fujii <danifujii@gmail.com>
+about: CLI to handle git branches
+args:
+  - BRANCH:
+      help: Branch name you want to quick switch to
+      required: false
+      index: 1
