@@ -1,4 +1,4 @@
-use crossterm::{cursor, execute, queue, style, terminal, Result};
+use crossterm::{cursor, execute, queue, style, style::Color, terminal, Result};
 use std::io::{Stdout, Write};
 
 pub fn display_closing_error(mut stdout: &Stdout, err: String) -> Result<()> {
@@ -21,6 +21,13 @@ pub fn write_line(mut stdout: &Stdout, line: &String, idx: u16) -> Result<()> {
         style::Print(line),
         cursor::MoveToNextLine(1),
     )?;
+    Ok(())
+}
+
+pub fn write_line_with_color(mut stdout: &Stdout, line: &String, idx: u16, color: Color) -> Result<()> {
+    execute!(stdout, style::SetForegroundColor(color))?;
+    write_line(&stdout, line, idx)?;
+    execute!(stdout, style::ResetColor)?;
     Ok(())
 }
 
