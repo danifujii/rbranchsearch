@@ -15,8 +15,12 @@ pub fn get_matching_branches(search: &String, branches: &Vec<String>) -> Vec<Str
     result
 }
 
-pub fn get_branches() -> Vec<String> {
-    let cmd = execute_command("git".to_string(), vec![&"branch".to_string()]);
+pub fn get_branches(all: bool) -> Vec<String> {
+    let mut args = vec!["branch".to_string()];
+    if all {
+        args.push(String::from("-a"));
+    }
+    let cmd = execute_command("git".to_string(), args);
     if cmd.status.success() {
         let s = str::from_utf8(&cmd.stdout).unwrap();
         return s
@@ -32,7 +36,7 @@ pub fn get_branches() -> Vec<String> {
 pub fn change_branch(branch: String) -> Result<(), String> {
     let cmd = execute_command(
         "git".to_string(),
-        vec![&"checkout".to_string(), &(branch.trim().to_string())],
+        vec!["checkout".to_string(), branch.trim().to_string()],
     );
     return if cmd.status.success() {
         Ok(())
@@ -41,7 +45,7 @@ pub fn change_branch(branch: String) -> Result<(), String> {
     };
 }
 
-fn execute_command(cmd: String, args: Vec<&String>) -> Output {
+fn execute_command(cmd: String, args: Vec<String>) -> Output {
     return Command::new(&cmd)
         .args(args)
         .output()

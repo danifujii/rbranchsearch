@@ -7,3 +7,8 @@ args:
       help: Branch name you want to quick switch to
       required: false
       index: 1
+  - all_branches:
+      short: a
+      long: all
+      takes_value: false
+      help: Display all branches (remote included)

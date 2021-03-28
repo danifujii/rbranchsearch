@@ -150,7 +150,7 @@ fn cleanup(mut stdout: &Stdout) -> Result<()> {
 fn main() -> Result<()> {
     let yaml = load_yaml!("cli.yaml");
     let matches = App::from_yaml(yaml).get_matches();
-    let branches = git::get_branches();
+    let branches = git::get_branches(matches.is_present("all_branches"));
     let stdout = stdout();
 
     setup(&stdout)?;
