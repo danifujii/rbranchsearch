@@ -175,21 +175,25 @@ fn cleanup(mut stdout: &Stdout) -> Result<()> {
 fn main() -> Result<()> {
     let yaml = load_yaml!("cli.yaml");
     let matches = App::from_yaml(yaml).get_matches();
-    let branches = git::get_branches(matches.is_present("all_branches"));
     let stdout = stdout();
 
     setup(&stdout)?;
 
-    if let Some(s) = matches.value_of("BRANCH") {
-        let matching = git::get_matching_branches(&s.to_string(), &branches);
-        if matching.is_empty() {
-            gui::display_closing_error(&stdout, String::from("Could not find a matching branch"))?;
-        } else if let Err(s) = git::change_branch(matching.first().unwrap().to_string()) {
-            gui::display_closing_error(&stdout, s)?;
+    let get_branches_res = git::get_branches(matches.is_present("all_branches"));
+    if let Ok(branches) = get_branches_res {
+        if let Some(s) = matches.value_of("BRANCH") {
+            let matching = git::get_matching_branches(&s.to_string(), &branches);
+            if matching.is_empty() {
+                gui::display_closing_error(&stdout, String::from("Could not find a matching branch"))?;
+            } else if let Err(s) = git::change_branch(matching.first().unwrap().to_string()) {
+                gui::display_closing_error(&stdout, s)?;
+            }
+        } else {
+            initial_draw(&stdout, &branches)?;
+            main_loop(&stdout, &branches)?;
         }
     } else {
-        initial_draw(&stdout, &branches)?;
-        main_loop(&stdout, &branches)?;
+        gui::display_closing_error(&stdout, get_branches_res.err().unwrap())?
     }
 
     cleanup(&stdout)?;
