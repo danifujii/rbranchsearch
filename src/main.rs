@@ -1,7 +1,9 @@
 use crossterm::{
     cursor,
     event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
-    execute, queue, terminal, Result,
+    execute, queue,
+    style::Color,
+    terminal, Result,
 };
 use std::io::{stdout, Stdout};
 #[macro_use]
@@ -12,7 +14,13 @@ mod git;
 mod gui;
 
 const SELECTED_INDICATOR: char = '*';
-const DISPLAY_OFFSET: u16 = 2;
+const DISPLAY_OFFSET: u16 = 6;
+const HEADER: &str = "
+|_   _ _  _  _ |_     _  _  _   _ _ |_
+|_) | (_|| |(_ | |   _> (/_(_| | (_ | |
+";
+const HEADER_OFFSET: u16 = 4;
+const HEADER_COLOR: Color = Color::DarkBlue;
 
 fn draw_selected_branch(stdout: &Stdout, branches: &Vec<String>, selected: usize) -> Result<()> {
     if branches.is_empty() || selected > branches.len() - 1 {
@@ -40,11 +48,18 @@ fn update_selected_branch(
     Ok(())
 }
 
-fn draw_header(stdout: &Stdout, content: Vec<String>) -> Result<()> {
-    gui::write_lines(stdout, &content, 0)?;
-    for i in content.len()..DISPLAY_OFFSET as usize {
-        gui::write_line(&stdout, &String::new(), i as u16)?;
+fn draw_header(stdout: &Stdout) -> Result<()> {
+    let mut idx = 0;
+    for line in HEADER.split("\n") {
+        gui::write_line_with_color(&stdout, &line.to_string(), idx, HEADER_COLOR)?;
+        idx += 1;
     }
+    gui::write_line_with_color(
+        &stdout,
+        &String::from("Searching: "),
+        HEADER_OFFSET,
+        HEADER_COLOR,
+    )?;
     Ok(())
 }
 
@@ -60,7 +75,7 @@ fn setup(mut stdout: &Stdout) -> Result<()> {
 }
 
 fn initial_draw(stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
-    draw_header(stdout, Vec::new())?;
+    draw_header(stdout)?;
     gui::write_lines(&stdout, &branches, DISPLAY_OFFSET)?;
     draw_selected_branch(&stdout, &branches, 0)?;
     Ok(())
@@ -71,7 +86,11 @@ fn main_loop(stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
     let mut selected_branch: usize = 0;
     let mut displayed_branches = branches.to_vec();
     loop {
-        if let Ok(Event::Key(KeyEvent { code: kc, modifiers: km })) = event::read() {
+        if let Ok(Event::Key(KeyEvent {
+            code: kc,
+            modifiers: km,
+        })) = event::read()
+        {
             match kc {
                 KeyCode::Up => {
                     if !displayed_branches.is_empty() && selected_branch > 0 {
@@ -112,7 +131,12 @@ fn main_loop(stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
                         break;
                     } else {
                         search.push(c);
-                        gui::write_line(&stdout, &format!("Searching: {}", search), 0)?;
+                        gui::write_line_with_color(
+                            &stdout,
+                            &format!("Searching: {}", search),
+                            HEADER_OFFSET,
+                            HEADER_COLOR,
+                        )?;
                         displayed_branches = git::get_matching_branches(&search, &branches);
                         gui::write_lines(&stdout, &displayed_branches, DISPLAY_OFFSET)?;
                         selected_branch = 0;
@@ -122,11 +146,12 @@ fn main_loop(stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
                 KeyCode::Backspace => {
                     if !search.is_empty() {
                         search.pop();
-                        if search.is_empty() {
-                            gui::write_line(&stdout, &String::new(), 0)?;
-                        } else {
-                            gui::write_line(&stdout, &format!("Searching: {}", search), 0)?;
-                        }
+                        gui::write_line_with_color(
+                            &stdout,
+                            &format!("Searching: {}", search),
+                            HEADER_OFFSET,
+                            HEADER_COLOR,
+                        )?;
 
                         displayed_branches = git::get_matching_branches(&search, &branches);
                         gui::write_lines(&stdout, &displayed_branches, DISPLAY_OFFSET)?;
