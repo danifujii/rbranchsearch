@@ -24,7 +24,12 @@ pub fn write_line(mut stdout: &Stdout, line: &String, idx: u16) -> Result<()> {
     Ok(())
 }
 
-pub fn write_line_with_color(mut stdout: &Stdout, line: &String, idx: u16, color: Color) -> Result<()> {
+pub fn write_line_with_color(
+    mut stdout: &Stdout,
+    line: &String,
+    idx: u16,
+    color: Color,
+) -> Result<()> {
     execute!(stdout, style::SetForegroundColor(color))?;
     write_line(&stdout, line, idx)?;
     execute!(stdout, style::ResetColor)?;

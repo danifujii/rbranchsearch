@@ -49,7 +49,11 @@ pub fn change_branch(branch: &String) -> Result<(), String> {
 pub fn delete_branch(branch: &String) -> Result<(), String> {
     let cmd = execute_command(
         "git".to_string(),
-        vec!["branch".to_string(), "-d".to_string(), branch.trim().to_string()],
+        vec![
+            "branch".to_string(),
+            "-d".to_string(),
+            branch.trim().to_string(),
+        ],
     );
     return if cmd.status.success() {
         Ok(())
