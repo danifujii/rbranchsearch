@@ -120,14 +120,28 @@ fn main_loop(stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
                     if !displayed_branches.is_empty()
                         && selected_branch < displayed_branches.len() - 1
                     {
-                        if let Err(s) = git::change_branch(branches[selected_branch].to_string()) {
+                        if let Err(s) = git::change_branch(&branches[selected_branch]) {
                             gui::display_closing_error(&stdout, s)?;
                         }
                         break;
                     }
                 }
+                KeyCode::BackTab => {
+                    if let Some(del_branch) = displayed_branches.get(selected_branch) {
+                        if let Err(s) = git::delete_branch(del_branch) {
+                            gui::display_closing_error(&stdout, s)?;
+                            break;
+                        } else {
+                            let new_branches = git::get_branches(false).unwrap();
+                            displayed_branches = git::get_matching_branches(&search, &new_branches);
+                            gui::write_lines(&stdout, &displayed_branches, DISPLAY_OFFSET)?;
+                            selected_branch = 0;
+                            draw_selected_branch(&stdout, &displayed_branches, selected_branch)?;
+                        }
+                    }
+                }
                 KeyCode::Char(c) => {
-                    if c == 'c' && km == KeyModifiers::CONTROL {
+                    if km == KeyModifiers::CONTROL && c == 'c' {
                         break;
                     } else {
                         search.push(c);
@@ -184,8 +198,11 @@ fn main() -> Result<()> {
         if let Some(s) = matches.value_of("BRANCH") {
             let matching = git::get_matching_branches(&s.to_string(), &branches);
             if matching.is_empty() {
-                gui::display_closing_error(&stdout, String::from("Could not find a matching branch"))?;
-            } else if let Err(s) = git::change_branch(matching.first().unwrap().to_string()) {
+                gui::display_closing_error(
+                    &stdout,
+                    String::from("Could not find a matching branch"),
+                )?;
+            } else if let Err(s) = git::change_branch(&matching.first().unwrap()) {
                 gui::display_closing_error(&stdout, s)?;
             }
         } else {
