@@ -93,7 +93,7 @@ impl<'a> Cli<'a> {
     }
 
     fn draw_selected_branch(&self) -> Result<()> {
-        if let Some(branch) = self.branches.get(self.selected_branch) {
+        if let Some(branch) = self.displayed_branches.get(self.selected_branch) {
             let branch: String = branch.chars().skip(1).collect();
             let selected_branch: String = format!("{}{}", SELECTED_INDICATOR, branch);
             gui::write_line(
@@ -151,7 +151,9 @@ impl<'a> Cli<'a> {
         self.displayed_branches = git::get_matching_branches(&self.search, &self.branches);
         gui::write_lines(self.stdout, &self.displayed_branches, DISPLAY_OFFSET)?;
         self.selected_branch = 0;
-        self.draw_selected_branch()?;
+        if !self.displayed_branches.is_empty() {
+            self.draw_selected_branch()?;
+        }
         Ok(())
     }
 
