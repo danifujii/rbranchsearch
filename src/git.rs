@@ -20,7 +20,7 @@ pub fn get_branches(all: bool) -> Result<Vec<String>, String> {
     if all {
         args.push(String::from("-a"));
     }
-    let cmd = execute_command("git".to_string(), args);
+    let cmd = execute_command("git", args);
     if cmd.status.success() {
         let s = str::from_utf8(&cmd.stdout).unwrap();
         return Ok(s
@@ -36,8 +36,8 @@ pub fn get_branches(all: bool) -> Result<Vec<String>, String> {
 
 pub fn change_branch(branch: &String) -> Result<(), String> {
     let cmd = execute_command(
-        "git".to_string(),
-        vec!["checkout".to_string(), branch.trim().to_string()],
+        "git",
+        vec![String::from("checkout"), String::from(branch.trim())],
     );
     return if cmd.status.success() {
         Ok(())
@@ -48,11 +48,11 @@ pub fn change_branch(branch: &String) -> Result<(), String> {
 
 pub fn delete_branch(branch: &String) -> Result<(), String> {
     let cmd = execute_command(
-        "git".to_string(),
+        "git",
         vec![
-            "branch".to_string(),
-            "-d".to_string(),
-            branch.trim().to_string(),
+            String::from("branch"),
+            String::from("-d"),
+            String::from(branch.trim()),
         ],
     );
     return if cmd.status.success() {
@@ -62,8 +62,8 @@ pub fn delete_branch(branch: &String) -> Result<(), String> {
     };
 }
 
-fn execute_command(cmd: String, args: Vec<String>) -> Output {
-    return Command::new(&cmd)
+fn execute_command(cmd: &str, args: Vec<String>) -> Output {
+    return Command::new(cmd)
         .args(args)
         .output()
         .expect(&format!("Could not execute command: {}", &cmd));
