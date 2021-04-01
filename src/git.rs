@@ -34,10 +34,22 @@ pub fn get_branches(all: bool) -> Result<Vec<String>, String> {
     }
 }
 
-pub fn change_branch(branch: String) -> Result<(), String> {
+pub fn change_branch(branch: &String) -> Result<(), String> {
     let cmd = execute_command(
         "git".to_string(),
         vec!["checkout".to_string(), branch.trim().to_string()],
+    );
+    return if cmd.status.success() {
+        Ok(())
+    } else {
+        Err(str::from_utf8(&cmd.stderr).unwrap().to_string())
+    };
+}
+
+pub fn delete_branch(branch: &String) -> Result<(), String> {
+    let cmd = execute_command(
+        "git".to_string(),
+        vec!["branch".to_string(), "-d".to_string(), branch.trim().to_string()],
     );
     return if cmd.status.success() {
         Ok(())
