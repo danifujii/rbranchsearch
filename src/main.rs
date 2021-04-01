@@ -117,10 +117,8 @@ fn main_loop(stdout: &Stdout, branches: &Vec<String>) -> Result<()> {
                     }
                 }
                 KeyCode::Enter => {
-                    if !displayed_branches.is_empty()
-                        && selected_branch < displayed_branches.len() - 1
-                    {
-                        if let Err(s) = git::change_branch(&branches[selected_branch]) {
+                    if let Some(b) = displayed_branches.get(selected_branch) {
+                        if let Err(s) = git::change_branch(b) {
                             gui::display_closing_error(&stdout, s)?;
                         }
                         break;
