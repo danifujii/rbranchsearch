@@ -35,6 +35,13 @@ fn quick_checkout(stdout: &Stdout, s: String, branches: Vec<String>) -> Result<(
     Ok(())
 }
 
+fn update_branches(stdout: &Stdout) -> Result<()> {
+    if let Err(s) = git::update_branches() {
+        gui::display_closing_error(&stdout, s)?;
+    }
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let yaml = load_yaml!("cli_opts.yaml");
     let matches = App::from_yaml(yaml).get_matches();
@@ -45,6 +52,8 @@ fn main() -> Result<()> {
     if let Ok(branches) = get_branches_res {
         if let Some(s) = matches.value_of("BRANCH") {
             quick_checkout(&stdout, s.to_string(), branches)?;
+        } else if matches.is_present("update") {
+            update_branches(&stdout)?;
         } else {
             let mut cli = cli::Cli::new(branches, &stdout);
             cli.main_loop()?;

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
-use std::process::{Command};
+use std::process::Command;
 use std::str;
+use subprocess::Exec;
 
 pub fn get_matching_branches(search: &String, branches: &Vec<String>) -> Vec<String> {
     let mut result = Vec::new();
@@ -47,6 +48,22 @@ pub fn delete_branch(branch: &String) -> Result<(), String> {
         ],
     )?;
     Ok(())
+}
+
+pub fn update_branches() -> Result<(), String> {
+    execute_command("git", vec![String::from("fetch"), String::from("-p")])?;
+    // From here, suppose that we are on git repository
+    let pipe = {
+        Exec::shell("git for-each-ref --format '%(refname:short) %(upstream:track)'")
+            | Exec::cmd("awk").arg("$2 == \"[gone]\" {print $1}")
+            | Exec::cmd("xargs").args(&["-r", "git", "branch", "-D"])
+    };
+    let captured_data = pipe.capture().unwrap();
+    return if captured_data.success() {
+        Ok(())
+    } else {
+        return Err(captured_data.stderr_str());
+    };
 }
 
 fn execute_command(cmd: &str, args: Vec<String>) -> Result<Vec<u8>, String> {

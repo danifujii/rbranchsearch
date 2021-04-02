@@ -4,7 +4,7 @@ author: Daniel Fujii <danifujii@gmail.com>
 about: CLI to handle git branches
 args:
   - BRANCH:
-      help: Branch name you want to quick switch to
+      help: Branch name you want to quickly switch to
       required: false
       index: 1
   - all_branches:
@@ -12,3 +12,8 @@ args:
       long: all
       takes_value: false
       help: Display all branches (remote included)
+  - update:
+      short: u
+      long: update
+      takes_value: false
+      help: Update branches, removing those that were deleted
