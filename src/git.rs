@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::process::{Command, Output};
+use std::process::{Command};
 use std::str;
 
 pub fn get_matching_branches(search: &String, branches: &Vec<String>) -> Vec<String> {
@@ -20,53 +20,45 @@ pub fn get_branches(all: bool) -> Result<Vec<String>, String> {
     if all {
         args.push(String::from("-a"));
     }
-    let cmd = execute_command("git", args);
-    if cmd.status.success() {
-        let s = str::from_utf8(&cmd.stdout).unwrap();
-        return Ok(s
-            .replace("*", " ")
-            .split("\n")
-            .map(|s| s.to_string())
-            .filter(|s| !s.is_empty())
-            .collect());
-    } else {
-        Err(str::from_utf8(&cmd.stderr).unwrap().to_string())
-    }
+    let stdout = execute_command("git", args)?;
+    let s = str::from_utf8(&stdout).unwrap();
+    Ok(s.replace("*", " ")
+        .split("\n")
+        .map(|s| s.to_string())
+        .filter(|s| !s.is_empty())
+        .collect())
 }
 
 pub fn change_branch(branch: &String) -> Result<(), String> {
-    let cmd = execute_command(
+    execute_command(
         "git",
         vec![String::from("checkout"), String::from(branch.trim())],
-    );
-    return if cmd.status.success() {
-        Ok(())
-    } else {
-        Err(str::from_utf8(&cmd.stderr).unwrap().to_string())
-    };
+    )?;
+    Ok(())
 }
 
 pub fn delete_branch(branch: &String) -> Result<(), String> {
-    let cmd = execute_command(
+    execute_command(
         "git",
         vec![
             String::from("branch"),
             String::from("-d"),
             String::from(branch.trim()),
         ],
-    );
-    return if cmd.status.success() {
-        Ok(())
-    } else {
-        Err(str::from_utf8(&cmd.stderr).unwrap().to_string())
-    };
+    )?;
+    Ok(())
 }
 
-fn execute_command(cmd: &str, args: Vec<String>) -> Output {
-    return Command::new(cmd)
+fn execute_command(cmd: &str, args: Vec<String>) -> Result<Vec<u8>, String> {
+    let cmd = Command::new(cmd)
         .args(args)
         .output()
         .expect(&format!("Could not execute command: {}", &cmd));
+    if cmd.status.success() {
+        Ok(cmd.stdout)
+    } else {
+        Err(str::from_utf8(&cmd.stderr).unwrap().to_string())
+    }
 }
 
 #[cfg(test)]
