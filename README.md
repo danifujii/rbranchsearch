@@ -4,7 +4,7 @@ A CLI that helps you manage your git branches in a repository. This is a rewrite
 of [branchsearch](https://github.com/npazosmendez/branchsearch) in Rust.
 
 This allows you to switch very easily and fast between branches or delete the branches you have
-locally to keep things tidy.
+locally to keep things tidy (with Backtab, Shift + Tab).
 
 ## Usage
 
