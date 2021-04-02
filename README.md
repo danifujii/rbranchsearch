@@ -15,10 +15,11 @@ USAGE:
 FLAGS:
     -a, --all        Display all branches (remote included)
     -h, --help       Prints help information
+    -u, --update     Update branches, removing those that were deleted
     -V, --version    Prints version information
 
 ARGS:
-    <BRANCH>    Branch name you want to quick switch to
+    <BRANCH>    Branch name you want to quickly switch to
 ```
 
 ## Install
